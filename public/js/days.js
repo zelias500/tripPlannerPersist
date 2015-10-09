@@ -2,6 +2,7 @@
 /* global $ mapModule */
 
 var days; 
+var currentDay;
 var daysModule = (function(){
 
   
@@ -17,16 +18,19 @@ var daysModule = (function(){
       //   restaurants: [],
       //   activities:  []
       // }],
-      var currentDay;
+      // var currentDay;
 
   function addDay () {
-    days.push({
-      hotels: [],
-      restaurants: [],
-      activities: []
+    // days.push({
+    //   hotels: [],
+    //   restaurants: [],
+    //   activities: []
+    // });
+    $.post("/api/days", function (newDay) {
+      days.push(newDay);
+      renderDayButtons();
+      switchDay(days.length - 1);
     });
-    renderDayButtons();
-    switchDay(days.length - 1);
   }
 
   function switchDay (index) {
@@ -61,8 +65,13 @@ var daysModule = (function(){
 
   exports.addAttraction = function(attraction) {
     if (currentDay[attraction.type].indexOf(attraction) !== -1) return;
-    currentDay[attraction.type].push(attraction);
-    renderDay(currentDay);
+    $.post("/api/days/" + currentDay._id + "/add", {type: attraction.type, attractionId: attraction._id}, function (day) {
+      days[day.number-1] = day;
+      currentDay = days[day.number-1];
+      renderDay(currentDay);
+      console.log(day)
+    });
+    // currentDay[attraction.type].push(attraction);
   };
 
   exports.removeAttraction = function (attraction) {
@@ -80,7 +89,7 @@ var daysModule = (function(){
       $list.empty();
       if(Array.isArray(day[type])) day[type].forEach(function(attraction){
         $list.append(itineraryHTML(attraction));
-        mapModule.drawAttraction(attraction);
+        // mapModule.drawAttraction(attraction);
       });
     });
   }
@@ -92,7 +101,13 @@ var daysModule = (function(){
   $(document).ready(function(){
     $.get("/api/days", function(data){
       days = data;
-      switchDay(0);
+      if (!days.length) {
+        $.post('/api/days', function () {
+          switchDay(0)
+        });
+      } else {
+        switchDay(0);
+      }
     })
     $('.day-buttons').on('click', '.new-day-btn', addDay);
     $('.day-buttons').on('click', 'button:not(.new-day-btn)', function() {
