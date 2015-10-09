@@ -1,15 +1,23 @@
 'use strict';
 /* global $ mapModule */
 
+var days; 
 var daysModule = (function(){
 
-  var exports = {},
-      days = [{
-        hotels:      [],
-        restaurants: [],
-        activities:  []
-      }],
-      currentDay = days[0];
+  
+  // Promise.resolve(
+  //   $.get("/api/days")
+  //   ).then(function(result){
+
+  // });
+  // console.log(days);
+  var exports = {}
+      // days = [{
+      //   hotels:      [],
+      //   restaurants: [],
+      //   activities:  []
+      // }],
+      var currentDay;
 
   function addDay () {
     days.push({
@@ -70,7 +78,7 @@ var daysModule = (function(){
     Object.keys(day).forEach(function(type){
       var $list = $('#itinerary ul[data-type="' + type + '"]');
       $list.empty();
-      day[type].forEach(function(attraction){
+      if(Array.isArray(day[type])) day[type].forEach(function(attraction){
         $list.append(itineraryHTML(attraction));
         mapModule.drawAttraction(attraction);
       });
@@ -82,7 +90,10 @@ var daysModule = (function(){
   }
 
   $(document).ready(function(){
-    switchDay(0);
+    $.get("/api/days", function(data){
+      days = data;
+      switchDay(0);
+    })
     $('.day-buttons').on('click', '.new-day-btn', addDay);
     $('.day-buttons').on('click', 'button:not(.new-day-btn)', function() {
       switchDay($(this).index());
