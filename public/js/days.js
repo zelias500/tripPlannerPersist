@@ -75,10 +75,22 @@ var daysModule = (function(){
   };
 
   exports.removeAttraction = function (attraction) {
-    var index = currentDay[attraction.type].indexOf(attraction);
-    if (index === -1) return;
-    currentDay[attraction.type].splice(index, 1);
-    renderDay(currentDay);
+    $.ajax({
+      url: "/api/days/" + currentDay._id + "/remove",
+      method: "DELETE",
+      data: {type: attraction.type, attractionId: attraction._id},
+      success: function(day){
+        days[day.number-1] = day;
+        currentDay = days[day.number-1];
+        renderDay(currentDay);
+        console.log(day)
+      },
+      error: function(error){
+        console.error(error.message)
+      }
+
+
+    })
   };
 
   function renderDay(day) {
@@ -88,14 +100,14 @@ var daysModule = (function(){
       var $list = $('#itinerary ul[data-type="' + type + '"]');
       $list.empty();
       if(Array.isArray(day[type])) day[type].forEach(function(attraction){
-        $list.append(itineraryHTML(attraction));
+        $list.append(itineraryHTML(attraction, type));
         // mapModule.drawAttraction(attraction);
       });
     });
   }
 
-  function itineraryHTML (attraction) {
-    return '<div class="itinerary-item><span class="title>' + attraction.name + '</span><button data-id="' + attraction._id + '" data-type="' + attraction.type + '" class="btn btn-xs btn-danger remove btn-circle">x</button></div>';
+  function itineraryHTML (attraction, type) {
+    return '<div class="itinerary-item><span class="title>' + attraction.name + '</span><button data-id="' + attraction._id + '" data-type="' + type + '" class="btn btn-xs btn-danger remove btn-circle">x</button></div>';
   }
 
   $(document).ready(function(){
